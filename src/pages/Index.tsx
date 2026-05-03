@@ -43,16 +43,24 @@ export default function Index() {
 
   const grouped: CountriesByContinent = useMemo(() => {
     if (!data) return {};
-    const term = debouncedFilter.trim().toLowerCase();
+    const terms = debouncedFilter
+      .toLowerCase()
+      .split(/[\s,]+/)
+      .map(t => t.trim())
+      .filter(Boolean);
     const complete = data.countries.filter(isCompleteCountry);
-    const list = term
-      ? complete.filter(
-          c =>
-            c.name.toLowerCase().includes(term) ||
-            c.capital?.toLowerCase().includes(term) ||
-            c.currency?.toLowerCase().includes(term)
-        )
-      : complete;
+    const list =
+      terms.length === 0
+        ? complete
+        : complete.filter(c =>
+            terms.every(
+              term =>
+                c.name.toLowerCase().includes(term) ||
+                c.capital?.toLowerCase().includes(term) ||
+                c.currency?.toLowerCase().includes(term) ||
+                c.continent.name.toLowerCase().includes(term)
+            )
+          );
     return list.reduce<CountriesByContinent>((acc, c) => {
       (acc[c.continent.name] ||= []).push(c);
       return acc;
@@ -89,7 +97,7 @@ export default function Index() {
           </label>
           <Input
             id="country-filter"
-            placeholder="Filter by country, capital name or currency ..."
+            placeholder="Filter by country, capital, currency or continent ..."
             value={filter}
             onChange={e => setFilter(e.target.value)}
             className="mb-6 max-w-sm"

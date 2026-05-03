@@ -15,51 +15,52 @@ npm run test:watch   # watch mode
 Run a single test file:
 
 ```bash
-npx vitest run src/hooks/useGraphQL.test.ts
+npx vitest run src/pages/Index.test.tsx
 ```
 
 Run tests matching a name pattern:
 
 ```bash
-npx vitest run -t "retries on failure"
+npx vitest run -t "filters countries"
 ```
 
 ## Architecture
 
 ### Data flow
 
-`graphqlRequest` (lib/graphql.ts) → `useGraphQL` hook (hooks/useGraphQL.ts) → page component (pages/Index.tsx)
+`apolloClient` (lib/apolloClient.ts) → `useQuery` in Index.tsx → rendered country cards
 
-- `graphqlRequest` is a plain async function: POST to the endpoint, parse the GraphQL envelope `{ data, errors }`, throw on anything wrong. It owns the **timeout** (10 s default via `AbortController`) and forwards an optional external `signal` for cancellation.
-- `useGraphQL` wraps it in a React hook. It owns **retry** (2× with incremental backoff), **cancellation on unmount** (AbortController cleanup), and **error reporting** via `reportError`. Variables are compared by `JSON.stringify` to avoid infinite re-renders from object identity; the actual value is read from a ref inside the effect.
-- The hook returns `AsyncState<T>` — a discriminated union `{ status, data, error }` — which the UI switches on directly.
+- `apolloClient.ts` configures Apollo Client v4 with an `InMemoryCache` and an `onError` link that routes all GraphQL and network errors through `reportError` before they reach the component.
+- `useQuery<CountriesData>(COUNTRIES_QUERY)` in `Index.tsx` returns `{ loading, error, data }` — Apollo's built-in state shape replaces the old custom `AsyncState<T>`.
+- `COUNTRIES_QUERY` is exported from `Index.tsx` so tests can import the same `DocumentNode` reference that `MockedProvider` requires for exact matching.
 
-### Error handling layers
+### Apollo v4 import paths
 
-1. `graphqlRequest` — throws typed errors (`"Network error: 500"`, `"Request timed out"`, joined GraphQL error messages)
-2. `useGraphQL` — catches after retries, calls `reportError`, sets `status: 'error'`
-3. `ErrorBoundary` (components/ErrorBoundary.tsx) — catches unexpected render errors; calls `reportError` with component stack via `componentDidCatch`, wraps the entire app in App.tsx
+Apollo Client v4 split its exports — wrong paths cause silent `undefined` errors:
+
+| What                                                       | Import from                    |
+| ---------------------------------------------------------- | ------------------------------ |
+| `useQuery`, `ApolloProvider`                               | `@apollo/client/react`         |
+| `ApolloClient`, `InMemoryCache`, `HttpLink`, `from`, `gql` | `@apollo/client`               |
+| `onError`                                                  | `@apollo/client/link/error`    |
+| `MockedProvider`                                           | `@apollo/client/testing/react` |
 
 ### Error observability
 
-All errors funnel through `reportError` in `lib/errorReporter.ts`. It currently logs to `console.error` with a structured payload. To wire up Sentry or another provider, change only that file.
+All errors funnel through `reportError` in `lib/errorReporter.ts`. The Apollo `onError` link handles both GraphQL errors (partial responses with `errors[]`) and network errors before they surface to the component. To wire up Sentry or another provider, change only `errorReporter.ts`.
 
 ### Types
 
 `src/types.ts` is the single source of truth for all shared types. Key exports:
 
 - `Country`, `Continent`, `Language` — API shapes
-- `GraphQLResponse<T>` / `AsyncState<T>` — generic envelopes
-- `isCountry` / `isCompleteCountry` — type guards used to narrow `unknown` API responses before rendering
+- `GraphQLResponse<T>` / `AsyncState<T>` — kept for reference; Apollo's `useQuery` return type supersedes `AsyncState<T>` in practice
+- `isCountry` / `isCompleteCountry` — type guards used to narrow API responses before rendering
 - `CountriesByContinent` — `Record<string, Country[]>`, used as the grouping result in Index.tsx
 
 ### Testing conventions
 
-- Fetch is mocked with `vi.stubGlobal('fetch', ...)` — no MSW
-- Timer-dependent tests (`useDebounce`, timeout) use `vi.useFakeTimers()` / `vi.useRealTimers()` and clean up in `afterEach`
-- `retryDelay: 0` is passed in hook tests to skip backoff delays
-- `renderHook` + `waitFor` from `@testing-library/react` for async hook states
-
-### Pre-commit hooks
-
-Husky runs ESLint + Prettier on staged `*.ts`/`*.tsx` files via lint-staged. Commits are blocked on lint or format errors.
+- Apollo queries are mocked with `MockedProvider` from `@apollo/client/testing/react`; the `request.query` must be the exact same `DocumentNode` reference exported by the component under test
+- `waitFor` polls until assertions pass — used for both Apollo resolution and debounce expiry (300 ms); set `timeout: 1000` on debounce assertions to give enough headroom
+- Fake timers (`vi.useFakeTimers`) conflict with Apollo's Promise-based mocks — avoid combining them; use `waitFor` with a timeout instead
+- Pre-commit hooks: Husky runs ESLint + Prettier on staged `*.ts`/`*.tsx` via lint-staged

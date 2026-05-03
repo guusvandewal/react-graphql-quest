@@ -1,14 +1,14 @@
 import { useMemo, useState } from 'react';
+import { useQuery } from '@apollo/client/react';
 import { useDebounce } from '@/hooks/useDebounce';
-import { useGraphQL } from '@/hooks/useGraphQL';
-import { COUNTRIES_ENDPOINT, gql } from '@/lib/graphql';
+import { gql } from '@/lib/graphql';
 import { CountryCard } from '@/components/CountryCard';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { isCompleteCountry } from '@/types';
 import type { Country, CountriesByContinent } from '@/types';
 
-const COUNTRIES_QUERY = gql`
+export const COUNTRIES_QUERY = gql`
   query AllCountries {
     countries {
       code
@@ -33,10 +33,7 @@ interface CountriesData {
 }
 
 export default function Index() {
-  const { status, data, error } = useGraphQL<CountriesData>({
-    endpoint: COUNTRIES_ENDPOINT,
-    query: COUNTRIES_QUERY,
-  });
+  const { loading, error, data } = useQuery<CountriesData>(COUNTRIES_QUERY);
 
   const [filter, setFilter] = useState('');
   const debouncedFilter = useDebounce(filter, 300);
@@ -70,8 +67,8 @@ export default function Index() {
             Search <span className="gradient-text"> for a country</span> with GraphQL
           </h1>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl">
-            A pure React app — no Apollo, no codegen — that fetches real data from a public GraphQL
-            API and shows the most common TypeScript patterns you'll meet on the job.
+            A pure React app that fetches real data from a public GraphQL API and shows the most
+            common TypeScript patterns you'll meet on the job.
           </p>
         </div>
       </header>
@@ -80,8 +77,9 @@ export default function Index() {
         <section aria-labelledby="results-heading">
           <SectionHeading id="results-heading" n={1} title="Live results" />
           <p className="text-muted-foreground mb-4">
-            The hook returns <code className="inline-code">{`{ status, data, error }`}</code>. We
-            render a different UI for each value of <code className="inline-code">status</code>.
+            Apollo's <code className="inline-code">useQuery</code> returns{' '}
+            <code className="inline-code">{`{ loading, error, data }`}</code>. We render a different
+            UI for each state.
           </p>
 
           <label htmlFor="country-filter" className="sr-only">
@@ -95,17 +93,17 @@ export default function Index() {
             className="mb-6 max-w-sm"
           />
 
-          {status === 'loading' && (
+          {loading && (
             <p role="status" className="text-muted-foreground">
               Loading countries…
             </p>
           )}
-          {status === 'error' && (
+          {error && (
             <p role="alert" className="text-destructive">
-              Something went wrong: {error}
+              Something went wrong: {error.message}
             </p>
           )}
-          {status === 'success' && data && (
+          {!loading && !error && data && (
             <div aria-live="polite" aria-atomic="false" className="space-y-8">
               {Object.entries(grouped).map(([continent, countries]) => (
                 <div key={continent}>
@@ -140,7 +138,7 @@ export default function Index() {
           >
             countries.trevorblades.com
           </a>{' '}
-          · Built with React + Vite.
+          · Built with React + Vite + Apollo.
         </div>
       </footer>
     </main>

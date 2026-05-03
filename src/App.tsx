@@ -1,16 +1,15 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ApolloProvider } from '@apollo/client/react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { apolloClient } from '@/lib/apolloClient';
 import Index from './pages/Index.tsx';
 import NotFound from './pages/NotFound.tsx';
 
-const queryClient = new QueryClient();
-
 const App = () => (
-  <QueryClientProvider client={queryClient}>
+  <ApolloProvider client={apolloClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
@@ -24,7 +23,7 @@ const App = () => (
         </ErrorBoundary>
       </BrowserRouter>
     </TooltipProvider>
-  </QueryClientProvider>
+  </ApolloProvider>
 );
 
 export default App;

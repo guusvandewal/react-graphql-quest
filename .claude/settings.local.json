@@ -10,7 +10,10 @@
       "Bash(chmod +x .husky/pre-commit)",
       "Bash(npx tsc *)",
       "Bash(pip show *)",
-      "Bash(npm test *)"
+      "Bash(npm test *)",
+      "Bash(node -e \"const m = require\\('@apollo/client/testing'\\); console.log\\(Object.keys\\(m\\)\\)\")",
+      "Bash(node --input-type=module)",
+      "Bash(node *)"
     ]
   }
 }

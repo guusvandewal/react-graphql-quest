@@ -1,13 +1,3 @@
-/**
- * Index.tsx — the only page in this learning app.
- *
- * Demonstrates:
- *   • Importing types from a barrel file (`@/types`)
- *   • Calling a GraphQL endpoint with plain `fetch`
- *   • Rendering loading / error / data branches with full type-safety
- *   • Inline TypeScript challenges so the reader can self-test
- */
-
 import { useMemo, useState } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useGraphQL } from '@/hooks/useGraphQL';
@@ -18,9 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { isCompleteCountry } from '@/types';
 import type { Country, CountriesByContinent } from '@/types';
 
-/* ------------------------------------------------------------------ */
-/*  The GraphQL query — a plain string. `gql` is just for highlighting. */
-/* ------------------------------------------------------------------ */
 const COUNTRIES_QUERY = gql`
   query AllCountries {
     countries {
@@ -41,13 +28,11 @@ const COUNTRIES_QUERY = gql`
   }
 `;
 
-/** Shape of the `data` field we expect back from the server. */
 interface CountriesData {
   countries: Country[];
 }
 
 export default function Index() {
-  // 👇 Generic argument tells the hook (and us) the shape of `data`.
   const { status, data, error } = useGraphQL<CountriesData>({
     endpoint: COUNTRIES_ENDPOINT,
     query: COUNTRIES_QUERY,
@@ -56,7 +41,6 @@ export default function Index() {
   const [filter, setFilter] = useState('');
   const debouncedFilter = useDebounce(filter, 300);
 
-  // Group countries by continent. `Record<string, Country[]>` lives in types.ts.
   const grouped: CountriesByContinent = useMemo(() => {
     if (!data) return {};
     const term = debouncedFilter.trim().toLowerCase();
@@ -77,7 +61,6 @@ export default function Index() {
 
   return (
     <main className="min-h-screen">
-      {/* ---------- Hero ---------- */}
       <header className="border-b">
         <div className="container py-16 max-w-5xl">
           <Badge variant="outline" className="mb-4">
@@ -94,24 +77,36 @@ export default function Index() {
       </header>
 
       <div className="container py-12 max-w-5xl space-y-16">
-        <section>
-          <SectionHeading n={1} title="Live results" />
+        <section aria-labelledby="results-heading">
+          <SectionHeading id="results-heading" n={1} title="Live results" />
           <p className="text-muted-foreground mb-4">
             The hook returns <code className="inline-code">{`{ status, data, error }`}</code>. We
             render a different UI for each value of <code className="inline-code">status</code>.
           </p>
 
+          <label htmlFor="country-filter" className="sr-only">
+            Filter countries
+          </label>
           <Input
+            id="country-filter"
             placeholder="Filter by country, capital name or currency ..."
             value={filter}
             onChange={e => setFilter(e.target.value)}
             className="mb-6 max-w-sm"
           />
 
-          {status === 'loading' && <p className="text-muted-foreground">Loading countries…</p>}
-          {status === 'error' && <p className="text-destructive">Something went wrong: {error}</p>}
+          {status === 'loading' && (
+            <p role="status" className="text-muted-foreground">
+              Loading countries…
+            </p>
+          )}
+          {status === 'error' && (
+            <p role="alert" className="text-destructive">
+              Something went wrong: {error}
+            </p>
+          )}
           {status === 'success' && data && (
-            <div className="space-y-8">
+            <div aria-live="polite" aria-atomic="false" className="space-y-8">
               {Object.entries(grouped).map(([continent, countries]) => (
                 <div key={continent}>
                   <h3 className="font-semibold text-lg mb-3">
@@ -126,7 +121,7 @@ export default function Index() {
                 </div>
               ))}
               {Object.keys(grouped).length === 0 && (
-                <p className="text-muted-foreground">No countries match "{filter}".</p>
+                <p className="text-muted-foreground">No countries match "{debouncedFilter}".</p>
               )}
             </div>
           )}
@@ -141,6 +136,7 @@ export default function Index() {
             href="https://countries.trevorblades.com"
             target="_blank"
             rel="noreferrer"
+            aria-label="countries.trevorblades.com (opens in new tab)"
           >
             countries.trevorblades.com
           </a>{' '}
@@ -151,11 +147,13 @@ export default function Index() {
   );
 }
 
-/* -------------------- tiny local component -------------------- */
-function SectionHeading({ n, title }: { n: number; title: string }) {
+function SectionHeading({ id, n, title }: { id: string; n: number; title: string }) {
   return (
-    <h2 className="text-2xl font-bold mb-3 flex items-center gap-3">
-      <span className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground text-sm">
+    <h2 id={id} className="text-2xl font-bold mb-3 flex items-center gap-3">
+      <span
+        aria-hidden="true"
+        className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground text-sm"
+      >
         {n}
       </span>
       {title}

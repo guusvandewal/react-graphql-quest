@@ -17,9 +17,10 @@ export class ErrorBoundary extends Component<Props, { error: Error | null }> {
     if (error) {
       return (
         this.props.fallback ?? (
-          <div className="p-6 text-center">
+          <div role="alert" className="p-6 text-center">
             <p className="text-destructive mb-3">Something went wrong: {error.message}</p>
             <button
+              type="button"
               className="text-sm underline text-muted-foreground"
               onClick={() => this.setState({ error: null })}
             >

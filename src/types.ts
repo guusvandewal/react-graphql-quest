@@ -1,21 +1,7 @@
 /**
  * =============================================================================
- *  types.ts — A tour of the most common TypeScript patterns
+ *  types.ts
  * =============================================================================
- *
- *  This file is intentionally chatty. It demonstrates the TS features you will
- *  use in 90% of real React/GraphQL apps:
- *
- *    1. `interface` vs `type`
- *    2. Union & literal types
- *    3. Optional / readonly properties
- *    4. Generics (the `<T>` thing)
- *    5. Utility types (Partial, Pick, Omit, Record)
- *    6. Type guards (narrowing `unknown` safely)
- *    7. Re-exporting from a barrel file
- *
- *  Everything here is `export`-ed so the rest of the app can `import { ... }`.
- * ============================================================================= */
 
 /* -------------------------------------------------------------------------- */
 /*  1. Interfaces — describe the shape of an object                            */
@@ -23,10 +9,10 @@
 
 /** A single country as returned by the Countries GraphQL API. */
 export interface Country {
-  /** ISO 3166-1 alpha-2 code, e.g. "DE" */
+  /** ISO 3166-1 alpha-2 code, e.g. "NL" */
   code: string;
   name: string;
-  emoji: string; // 🇩🇪
+  emoji: string; // 🇳🇱
   capital: string | null; // some countries have no capital (e.g. Nauru)
   currency: string | null;
   continent: Continent;
@@ -78,7 +64,7 @@ export interface AsyncState<T> {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  4. Utility types — built-in TS helpers (extremely common in real code)     */
+/*  4. Utility types                                                          */
 /* -------------------------------------------------------------------------- */
 
 /** A "preview" Country: just the bits we need for a list item. */

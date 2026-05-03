@@ -9,6 +9,7 @@
  */
 
 import { useMemo, useState } from 'react';
+import { useDebounce } from '@/hooks/useDebounce';
 import { useGraphQL } from '@/hooks/useGraphQL';
 import { COUNTRIES_ENDPOINT, gql } from '@/lib/graphql';
 import { CountryCard } from '@/components/CountryCard';
@@ -53,11 +54,12 @@ export default function Index() {
   });
 
   const [filter, setFilter] = useState('');
+  const debouncedFilter = useDebounce(filter, 300);
 
   // Group countries by continent. `Record<string, Country[]>` lives in types.ts.
   const grouped: CountriesByContinent = useMemo(() => {
     if (!data) return {};
-    const term = filter.trim().toLowerCase();
+    const term = debouncedFilter.trim().toLowerCase();
     const complete = data.countries.filter(isCompleteCountry);
     const list = term
       ? complete.filter(
@@ -71,7 +73,7 @@ export default function Index() {
       (acc[c.continent.name] ||= []).push(c);
       return acc;
     }, {});
-  }, [data, filter]);
+  }, [data, debouncedFilter]);
 
   return (
     <main className="min-h-screen">

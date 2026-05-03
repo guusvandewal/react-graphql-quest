@@ -60,7 +60,14 @@ export default function Index() {
     if (!data) return {};
     const term = filter.trim().toLowerCase();
     const complete = data.countries.filter(isCompleteCountry);
-    const list = term ? complete.filter(c => c.name.toLowerCase().includes(term)) : complete;
+    const list = term
+      ? complete.filter(
+          c =>
+            c.name.toLowerCase().includes(term) ||
+            c.capital?.toLowerCase().includes(term) ||
+            c.currency?.toLowerCase().includes(term)
+        )
+      : complete;
     return list.reduce<CountriesByContinent>((acc, c) => {
       (acc[c.continent.name] ||= []).push(c);
       return acc;
@@ -106,7 +113,7 @@ export default function Index() {
           </p>
 
           <Input
-            placeholder="Filter by country name…"
+            placeholder="Filter by country, capital name or currency ..."
             value={filter}
             onChange={e => setFilter(e.target.value)}
             className="mb-6 max-w-sm"

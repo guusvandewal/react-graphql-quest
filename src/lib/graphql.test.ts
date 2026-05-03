@@ -105,14 +105,8 @@ describe('graphqlRequest', () => {
 
 describe('gql', () => {
   it('returns the template string unchanged', () => {
-    expect(gql`
-      {
-        countries {
-          code
-          name
-        }
-      }
-    `).toBe('{ countries { code name } }');
+    // prettier-ignore
+    expect(gql`{ countries { code name } }`).toBe('{ countries { code name } }');
   });
 
   it('interpolates values into the string', () => {

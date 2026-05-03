@@ -101,6 +101,10 @@ export type CountriesByContinent = Record<string, Country[]>;
  * A type guard is a function that returns `value is X`.
  * If it returns true, TS will narrow the variable to type X inside the branch.
  */
+export function isCompleteCountry(c: Country): c is NonNullableCountry {
+  return c.capital !== null && c.currency !== null;
+}
+
 export function isCountry(value: unknown): value is Country {
   return (
     typeof value === 'object' &&

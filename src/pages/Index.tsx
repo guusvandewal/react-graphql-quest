@@ -15,6 +15,7 @@ import { CountryCard } from '@/components/CountryCard';
 import { Challenge } from '@/components/Challenge';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { isCompleteCountry } from '@/types';
 import type {
   Country,
   CountriesByContinent,
@@ -64,9 +65,8 @@ export default function Index() {
   const grouped: CountriesByContinent = useMemo(() => {
     if (!data) return {};
     const term = filter.trim().toLowerCase();
-    const list = term
-      ? data.countries.filter(c => c.name.toLowerCase().includes(term))
-      : data.countries;
+    const complete = data.countries.filter(isCompleteCountry);
+    const list = term ? complete.filter(c => c.name.toLowerCase().includes(term)) : complete;
     return list.reduce<CountriesByContinent>((acc, c) => {
       (acc[c.continent.name] ||= []).push(c);
       return acc;

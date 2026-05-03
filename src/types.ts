@@ -26,7 +26,7 @@ export interface Country {
   /** ISO 3166-1 alpha-2 code, e.g. "DE" */
   code: string;
   name: string;
-  emoji: string;     // 🇩🇪
+  emoji: string; // 🇩🇪
   capital: string | null; // some countries have no capital (e.g. Nauru)
   currency: string | null;
   continent: Continent;
@@ -48,7 +48,7 @@ export interface Language {
 /* -------------------------------------------------------------------------- */
 
 /** Every async UI is in one of these four states. Memorize this pattern. */
-export type RequestStatus = "idle" | "loading" | "success" | "error";
+export type RequestStatus = 'idle' | 'loading' | 'success' | 'error';
 
 /* -------------------------------------------------------------------------- */
 /*  3. Generics — types that take parameters, like functions for types         */
@@ -82,13 +82,13 @@ export interface AsyncState<T> {
 /* -------------------------------------------------------------------------- */
 
 /** A "preview" Country: just the bits we need for a list item. */
-export type CountryPreview = Pick<Country, "code" | "name" | "emoji">;
+export type CountryPreview = Pick<Country, 'code' | 'name' | 'emoji'>;
 
 /** A Country we are editing locally — every field becomes optional. */
 export type CountryDraft = Partial<Country>;
 
 /** A Country without its languages relation. */
-export type CountryWithoutLanguages = Omit<Country, "languages">;
+export type CountryWithoutLanguages = Omit<Country, 'languages'>;
 
 /** A lookup map: continent code -> list of countries. */
 export type CountriesByContinent = Record<string, Country[]>;
@@ -103,11 +103,11 @@ export type CountriesByContinent = Record<string, Country[]>;
  */
 export function isCountry(value: unknown): value is Country {
   return (
-    typeof value === "object" &&
+    typeof value === 'object' &&
     value !== null &&
-    "code" in value &&
-    "name" in value &&
-    "continent" in value
+    'code' in value &&
+    'name' in value &&
+    'continent' in value
   );
 }
 
@@ -124,3 +124,10 @@ export type Selector<T, R> = (item: T) => R;
  *  B. Make a `ReadonlyCountry` where every field is readonly.
  *  C. Build `NonNullableCountry` where `capital` and `currency` cannot be null.
  *  ------------------------------------------------------------------------- */
+
+export type CountryName = Pick<Country, 'name'>;
+export type ReadonlyCountry = Readonly<Country>;
+export type NonNullableCountry = Omit<Country, 'capital' | 'currency'> & {
+  capital: string;
+  currency: string;
+};

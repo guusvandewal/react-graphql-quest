@@ -1,8 +1,9 @@
+import { memo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { Country } from '@/types';
 
-export function CountryCard({ country }: { country: Country }) {
+export const CountryCard = memo(function CountryCard({ country }: { country: Country }) {
   return (
     <Card className="p-5 shadow-[var(--shadow-card)] hover:-translate-y-0.5 transition-transform">
       <div className="flex items-start gap-3">
@@ -28,4 +29,4 @@ export function CountryCard({ country }: { country: Country }) {
       </div>
     </Card>
   );
-}
+});

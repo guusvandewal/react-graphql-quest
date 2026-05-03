@@ -7,8 +7,6 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { Country } from '@/types';
 
-console.log('tet');
-
 export function CountryCard({ country }: { country: Country }) {
   return (
     <Card className="p-5 shadow-[var(--shadow-card)] hover:-translate-y-0.5 transition-transform">

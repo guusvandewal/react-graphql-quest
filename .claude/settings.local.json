@@ -1,5 +1,13 @@
 {
   "permissions": {
-    "allow": ["Bash(npm install *)", "Bash(npx husky *)", "Bash(npx lint-staged *)"]
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(npx husky *)",
+      "Bash(npx lint-staged *)",
+      "Bash(git config *)",
+      "Bash(echo \"console.log\\('test'\\)\")",
+      "Bash(npx eslint *)",
+      "Bash(chmod +x .husky/pre-commit)"
+    ]
   }
 }

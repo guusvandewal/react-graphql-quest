@@ -88,8 +88,9 @@ export default function Index() {
         <section aria-labelledby="results-heading">
           <SectionHeading id="results-heading" n={1} title="Live results" />
           <p className="text-muted-foreground mb-4">
-            The hook returns <code className="inline-code">{`{ status, data, error }`}</code>. We
-            render a different UI for each value of <code className="inline-code">status</code>.
+            Filter by <code className="inline-code">{`{ Country, Capital, Currency }`}</code>. We
+            render a different UI for each value of <code className="inline-code">it's status</code>
+            .
           </p>
 
           <label htmlFor="country-filter" className="sr-only">
@@ -97,7 +98,7 @@ export default function Index() {
           </label>
           <Input
             id="country-filter"
-            placeholder="Filter by country, capital, currency or continent ..."
+            placeholder="Search ..."
             value={filter}
             onChange={e => setFilter(e.target.value)}
             className="mb-6 max-w-sm"

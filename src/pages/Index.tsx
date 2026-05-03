@@ -16,16 +16,10 @@ import { Challenge } from '@/components/Challenge';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { isCompleteCountry } from '@/types';
-import type {
-  Country,
-  CountriesByContinent,
-  CountryName,
-  ReadonlyCountry,
-  NonNullableCountry,
-} from '@/types';
+import type { Country, CountriesByContinent } from '@/types';
 
 /* ------------------------------------------------------------------ */
-/*  The GraphQL query — a plain string. `gql` is just for highlighting */
+/*  The GraphQL query — a plain string. `gql` is just for highlighting. */
 /* ------------------------------------------------------------------ */
 const COUNTRIES_QUERY = gql`
   query AllCountries {

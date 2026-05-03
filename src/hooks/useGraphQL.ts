@@ -5,9 +5,9 @@
  * branches without juggling three separate useState calls.
  */
 
-import { useEffect, useRef, useState } from "react";
-import { graphqlRequest } from "@/lib/graphql";
-import type { AsyncState } from "@/types";
+import { useEffect, useRef, useState } from 'react';
+import { graphqlRequest } from '@/lib/graphql';
+import type { AsyncState } from '@/types';
 
 interface Options {
   /** GraphQL endpoint URL */
@@ -16,39 +16,59 @@ interface Options {
   query: string;
   /** Optional variables */
   variables?: Record<string, unknown>;
-  /** Re-fetch when these change (like useEffect deps) */
-  deps?: unknown[];
+  /** How many times to retry on failure before settling on error (default 2) */
+  retries?: number;
+  /** Delay between retries in ms — exposed so tests can pass 0 (default 300) */
+  retryDelay?: number;
 }
 
-export function useGraphQL<T>({ endpoint, query, variables, deps = [] }: Options): AsyncState<T> {
+export function useGraphQL<T>({
+  endpoint,
+  query,
+  variables,
+  retries = 2,
+  retryDelay = 300,
+}: Options): AsyncState<T> {
   const [state, setState] = useState<AsyncState<T>>({
-    status: "idle",
+    status: 'idle',
     data: null,
     error: null,
   });
 
-  // Avoid setting state on an unmounted component (classic React gotcha).
-  const isMounted = useRef(true);
-  useEffect(() => {
-    isMounted.current = true;
-    return () => { isMounted.current = false; };
-  }, []);
+  // Keep the latest variables object in a ref so the effect reads the current
+  // value without needing it as a dep (objects would cause infinite re-renders).
+  const variablesRef = useRef(variables);
+  variablesRef.current = variables;
+
+  // Serialize variables only to determine *when* to re-run the effect.
+  const serializedVars = JSON.stringify(variables);
 
   useEffect(() => {
-    setState({ status: "loading", data: null, error: null });
+    const controller = new AbortController();
 
-    graphqlRequest<T>(endpoint, query, variables)
-      .then((data) => {
-        if (!isMounted.current) return;
-        setState({ status: "success", data, error: null });
-      })
-      .catch((err: unknown) => {
-        if (!isMounted.current) return;
-        const message = err instanceof Error ? err.message : "Unknown error";
-        setState({ status: "error", data: null, error: message });
-      });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps);
+    const run = async (attempt: number): Promise<void> => {
+      try {
+        const data = await graphqlRequest<T>(endpoint, query, variablesRef.current, {
+          signal: controller.signal,
+        });
+        setState({ status: 'success', data, error: null });
+      } catch (err) {
+        if (controller.signal.aborted) return; // component unmounted — discard
+        if (attempt < retries) {
+          await new Promise<void>(r => setTimeout(r, retryDelay * (attempt + 1)));
+          if (!controller.signal.aborted) await run(attempt + 1);
+        } else {
+          const message = err instanceof Error ? err.message : 'Unknown error';
+          setState({ status: 'error', data: null, error: message });
+        }
+      }
+    };
+
+    setState({ status: 'loading', data: null, error: null });
+    run(0);
+
+    return () => controller.abort();
+  }, [endpoint, query, serializedVars, retries, retryDelay]);
 
   return state;
 }

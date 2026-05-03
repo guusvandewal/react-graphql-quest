@@ -42,11 +42,11 @@ describe('useGraphQL', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('transitions to error when fetch rejects', async () => {
+  it('transitions to error after exhausting all retries', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network down')));
 
     const { result } = renderHook(() =>
-      useGraphQL({ endpoint: COUNTRIES_ENDPOINT, query: '{ test }' })
+      useGraphQL({ endpoint: COUNTRIES_ENDPOINT, query: '{ test }', retries: 0 })
     );
 
     await waitFor(() => expect(result.current.status).toBe('error'));
@@ -58,7 +58,7 @@ describe('useGraphQL', () => {
     vi.stubGlobal('fetch', makeFetch({}, false));
 
     const { result } = renderHook(() =>
-      useGraphQL({ endpoint: COUNTRIES_ENDPOINT, query: '{ test }' })
+      useGraphQL({ endpoint: COUNTRIES_ENDPOINT, query: '{ test }', retries: 0 })
     );
 
     await waitFor(() => expect(result.current.status).toBe('error'));
@@ -69,26 +69,50 @@ describe('useGraphQL', () => {
     vi.stubGlobal('fetch', makeFetch({ errors: [{ message: 'Resolver failed' }] }));
 
     const { result } = renderHook(() =>
-      useGraphQL({ endpoint: COUNTRIES_ENDPOINT, query: '{ test }' })
+      useGraphQL({ endpoint: COUNTRIES_ENDPOINT, query: '{ test }', retries: 0 })
     );
 
     await waitFor(() => expect(result.current.status).toBe('error'));
     expect(result.current.error).toBe('Resolver failed');
   });
 
-  it('re-fetches when deps change', async () => {
-    const fetch = makeFetch({ data: { value: 1 } });
+  it('retries on failure and succeeds on a later attempt', async () => {
+    const fetch = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('Network down'))
+      .mockResolvedValue({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        json: () => Promise.resolve({ data: { countries: [] } }),
+      });
+    vi.stubGlobal('fetch', fetch);
+
+    const { result } = renderHook(() =>
+      useGraphQL<{ countries: [] }>({
+        endpoint: COUNTRIES_ENDPOINT,
+        query: '{ countries }',
+        retries: 1,
+        retryDelay: 0,
+      })
+    );
+
+    await waitFor(() => expect(result.current.status).toBe('success'));
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('re-fetches when the query changes', async () => {
+    const fetch = makeFetch({ data: {} });
     vi.stubGlobal('fetch', fetch);
 
     const { rerender } = renderHook(
-      ({ id }: { id: number }) =>
-        useGraphQL({ endpoint: COUNTRIES_ENDPOINT, query: '{ test }', deps: [id] }),
-      { initialProps: { id: 1 } }
+      ({ query }: { query: string }) => useGraphQL({ endpoint: COUNTRIES_ENDPOINT, query }),
+      { initialProps: { query: '{ query1 }' } }
     );
 
     await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
 
-    rerender({ id: 2 });
+    rerender({ query: '{ query2 }' });
 
     await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
   });

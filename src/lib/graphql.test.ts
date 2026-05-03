@@ -11,7 +11,10 @@ function makeFetch(body: unknown, ok = true, status = 200) {
 }
 
 describe('graphqlRequest', () => {
-  afterEach(() => vi.restoreAllMocks());
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
 
   it('returns data on a successful response', async () => {
     vi.stubGlobal('fetch', makeFetch({ data: { countries: [{ code: 'DE' }] } }));
@@ -74,6 +77,29 @@ describe('graphqlRequest', () => {
     await expect(graphqlRequest(COUNTRIES_ENDPOINT, '{ countries }')).rejects.toThrow(
       'Network down'
     );
+  });
+
+  it('throws "Request timed out" when the timeout fires before a response', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation(
+        (_url: string, { signal }: { signal: AbortSignal }) =>
+          new Promise((_, reject) => {
+            signal.addEventListener('abort', () =>
+              reject(new DOMException('The user aborted a request.', 'AbortError'))
+            );
+          })
+      )
+    );
+
+    const promise = graphqlRequest(COUNTRIES_ENDPOINT, '{ countries }', undefined, {
+      timeoutMs: 5_000,
+    });
+
+    vi.advanceTimersByTime(5_001);
+
+    await expect(promise).rejects.toThrow('Request timed out');
   });
 });
 

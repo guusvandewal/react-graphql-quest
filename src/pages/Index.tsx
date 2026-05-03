@@ -39,6 +39,7 @@ export default function Index() {
   });
 
   const [filter, setFilter] = useState('');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const debouncedFilter = useDebounce(filter, 300);
 
   const grouped: CountriesByContinent = useMemo(() => {
@@ -61,11 +62,19 @@ export default function Index() {
                 c.continent.name.toLowerCase().includes(term)
             )
           );
-    return list.reduce<CountriesByContinent>((acc, c) => {
+    const grouped = list.reduce<CountriesByContinent>((acc, c) => {
       (acc[c.continent.name] ||= []).push(c);
       return acc;
     }, {});
-  }, [data, debouncedFilter]);
+
+    Object.keys(grouped).forEach(continent => {
+      grouped[continent].sort((a, b) =>
+        sortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
+      );
+    });
+
+    return grouped;
+  }, [data, debouncedFilter, sortOrder]);
 
   return (
     <main className="min-h-screen">
@@ -96,13 +105,23 @@ export default function Index() {
           <label htmlFor="country-filter" className="sr-only">
             Filter countries
           </label>
-          <Input
-            id="country-filter"
-            placeholder="Search ..."
-            value={filter}
-            onChange={e => setFilter(e.target.value)}
-            className="mb-6 max-w-sm"
-          />
+          <div className="mb-6 flex items-center gap-2">
+            <span className="text-sm text-muted-foreground whitespace-nowrap">Sort:</span>
+            <Input
+              id="country-filter"
+              placeholder="Search ..."
+              value={filter}
+              onChange={e => setFilter(e.target.value)}
+              className="max-w-sm"
+            />
+            <button
+              type="button"
+              onClick={() => setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'))}
+              className="px-3 py-2 border rounded text-sm whitespace-nowrap"
+            >
+              {sortOrder === 'asc' ? 'A → Z' : 'Z → A'}
+            </button>
+          </div>
 
           {status === 'loading' && (
             <p role="status" className="text-muted-foreground">

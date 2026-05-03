@@ -121,17 +121,14 @@ export function isCountry(value: unknown): value is Country {
 
 export type Selector<T, R> = (item: T) => R;
 
-/* -------------------------------------------------------------------------- */
-/*  💡 CHALLENGE for the reader (answers in `Index.tsx` comments):
- *
- *  A. Write a type `CountryName` that equals just `Country["name"]`.
- *  B. Make a `ReadonlyCountry` where every field is readonly.
- *  C. Build `NonNullableCountry` where `capital` and `currency` cannot be null.
- *  ------------------------------------------------------------------------- */
-
-export type CountryName = Pick<Country, 'name'>;
-export type ReadonlyCountry = Readonly<Country>;
 export type NonNullableCountry = Omit<Country, 'capital' | 'currency'> & {
   capital: string;
   currency: string;
 };
+
+/* -------------------------------------------------------------------------- */
+/*  7 Not used for now                                                        */
+/* -------------------------------------------------------------------------- */
+
+export type CountryName = Pick<Country, 'name'>;
+export type ReadonlyCountry = Readonly<Country>;

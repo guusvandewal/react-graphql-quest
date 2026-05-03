@@ -9,7 +9,8 @@
       "Bash(npx eslint *)",
       "Bash(chmod +x .husky/pre-commit)",
       "Bash(npx tsc *)",
-      "Bash(pip show *)"
+      "Bash(pip show *)",
+      "Bash(npm test *)"
     ]
   }
 }

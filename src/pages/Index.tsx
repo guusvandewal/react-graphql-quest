@@ -12,7 +12,6 @@ import { useMemo, useState } from 'react';
 import { useGraphQL } from '@/hooks/useGraphQL';
 import { COUNTRIES_ENDPOINT, gql } from '@/lib/graphql';
 import { CountryCard } from '@/components/CountryCard';
-import { Challenge } from '@/components/Challenge';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { isCompleteCountry } from '@/types';
@@ -83,7 +82,7 @@ export default function Index() {
             React · TypeScript · GraphQL
           </Badge>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-            Learn <span className="gradient-text">GraphQL + TypeScript</span> by reading one app
+            Search <span className="gradient-text"> for a country</span> with GraphQL
           </h1>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl">
             A pure React app — no Apollo, no codegen — that fetches real data from a public GraphQL
@@ -93,20 +92,8 @@ export default function Index() {
       </header>
 
       <div className="container py-12 max-w-5xl space-y-16">
-        {/* ---------- Section 1: the query ---------- */}
         <section>
-          <SectionHeading n={1} title="The GraphQL query" />
-          <p className="text-muted-foreground mb-4">
-            GraphQL is just an HTTP <code className="inline-code">POST</code> with a JSON body
-            containing a <code className="inline-code">query</code> string. No special client
-            required.
-          </p>
-          <pre className="code-block">{COUNTRIES_QUERY.trim()}</pre>
-        </section>
-
-        {/* ---------- Section 2: results ---------- */}
-        <section>
-          <SectionHeading n={2} title="Live results" />
+          <SectionHeading n={1} title="Live results" />
           <p className="text-muted-foreground mb-4">
             The hook returns <code className="inline-code">{`{ status, data, error }`}</code>. We
             render a different UI for each value of <code className="inline-code">status</code>.
@@ -141,97 +128,6 @@ export default function Index() {
               )}
             </div>
           )}
-        </section>
-
-        {/* ---------- Section 3: challenges ---------- */}
-        <section>
-          <SectionHeading n={3} title="Test yourself" />
-          <p className="text-muted-foreground mb-6">
-            Five quick questions covering the patterns used in this app. Pick the answer you think
-            is right — explanations appear instantly.
-          </p>
-
-          <div className="grid gap-4">
-            <Challenge
-              question="What does the `T` mean in `useGraphQL<T>(...)`?"
-              options={[
-                'T is a runtime variable holding the fetched data',
-                'T is a generic type parameter — the caller decides the shape',
-                'T stands for `Type`, a built-in TS keyword',
-                'T must always be `any`',
-              ]}
-              correctIndex={1}
-              explanation="Generics let a function/hook be reusable with many types. The caller passes the type, e.g. useGraphQL<CountriesData>(...)."
-            />
-
-            <Challenge
-              question="Which utility type would you use to make EVERY field of `Country` optional?"
-              options={[
-                "Pick<Country, 'name'>",
-                "Omit<Country, 'name'>",
-                'Partial<Country>',
-                'Readonly<Country>',
-              ]}
-              correctIndex={2}
-              explanation="`Partial<T>` walks every key of T and adds `?` to it. Perfect for draft/edit forms."
-            />
-
-            <Challenge
-              question="A GraphQL response always has the shape:"
-              options={[
-                '{ result, status }',
-                '{ data, errors }',
-                '{ payload, meta }',
-                'Whatever the server decides',
-              ]}
-              correctIndex={1}
-              explanation="The GraphQL spec mandates an envelope with optional `data` and optional `errors`. Both can be present at once (partial success)."
-            />
-
-            <Challenge
-              question="Why do we type the `fetch` body as `unknown` then narrow it?"
-              options={[
-                'Because `any` is faster at runtime',
-                'Because the network can return literally anything — `unknown` forces us to validate before use',
-                'Because TS requires it',
-                "We don't — `any` is fine",
-              ]}
-              correctIndex={1}
-              explanation="`unknown` is the type-safe twin of `any`: you cannot use the value until you've proven what it is (e.g. with a type guard like `isCountry`)."
-            />
-
-            <Challenge
-              question="Which of these is a valid TypeScript type guard?"
-              options={[
-                'function isCountry(v) { return v.code; }',
-                "function isCountry(v: unknown): v is Country { return typeof v === 'object' && v !== null && 'code' in v; }",
-                'type isCountry = Country;',
-                'const isCountry = (v: any) => v as Country;',
-              ]}
-              correctIndex={1}
-              explanation="A type guard is a function whose return type is `value is X`. Inside the `if` branch, TS narrows the variable to X."
-            />
-          </div>
-        </section>
-
-        {/* ---------- Section 4: challenges from types.ts ---------- */}
-        <section>
-          <SectionHeading n={4} title="Bonus exercises" />
-          <p className="text-muted-foreground mb-4">
-            Open <code className="inline-code">src/types.ts</code> and try these on your own.
-            Solutions below — no peeking!
-          </p>
-          <pre className="code-block">{`// A. Extract just the name type:
-type CountryName = Country["name"]; // string
-
-// B. Make all fields readonly:
-type ReadonlyCountry = Readonly<Country>;
-
-// C. Force capital & currency to be non-null:
-type NonNullableCountry = Omit<Country, "capital" | "currency"> & {
-  capital: string;
-  currency: string;
-};`}</pre>
         </section>
       </div>
 

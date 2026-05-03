@@ -7,6 +7,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { graphqlRequest } from '@/lib/graphql';
+import { reportError } from '@/lib/errorReporter';
 import type { AsyncState } from '@/types';
 
 interface Options {
@@ -59,6 +60,7 @@ export function useGraphQL<T>({
           if (!controller.signal.aborted) await run(attempt + 1);
         } else {
           const message = err instanceof Error ? err.message : 'Unknown error';
+          reportError({ message, context: `useGraphQL(${endpoint})`, error: err });
           setState({ status: 'error', data: null, error: message });
         }
       }
